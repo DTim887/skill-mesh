@@ -17,7 +17,9 @@ function formatDomain(domain: Domain): string {
 export default class DomainSearch extends Command {
   static override args = {
     keyword: Args.string({
-      description: '搜索关键词，可包含多个词（用空格分隔）；不提供时列出全部已发布的知识库',
+      description:
+        '搜索关键词，可包含多个词（用空格分隔，无需加引号）；不提供时列出全部已发布的知识库',
+      multiple: true,
       required: false,
     }),
   }
@@ -37,8 +39,9 @@ export default class DomainSearch extends Command {
 
   public async run(): Promise<void> {
     const {args} = await this.parse(DomainSearch)
+    const keyword = args.keyword?.join(' ')
 
-    const result = await runSearch(args.keyword)
+    const result = await runSearch(keyword)
 
     if (process.stdout.isTTY) {
       this.log(BANNER_RULE)

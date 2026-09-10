@@ -54,6 +54,24 @@ describe('domain search', () => {
     expect(stdout).to.contain('growth-team')
   })
 
+  it('accepts a multi-word keyword typed unquoted, without erroring on the extra positional word', async () => {
+    // Regression test: `search.ts` originally declared a single non-multiple Args.string, so
+    // `skillmesh domain search commerce foundation` (unquoted, two shell words) failed with
+    // "Unexpected argument: foundation" instead of being treated as one two-word keyword.
+    nock(CATALOG_HOST)
+      .get(CATALOG_PATH)
+      .reply(200, {
+        domains: {
+          ordering: rawDomain({name: 'CommerceFoundation_Ordering', tags: ['commerce foundation', 'ordering']}),
+        },
+      })
+
+    const {error, stdout} = await runCommand(['domain', 'search', 'commerce', 'foundation'])
+
+    expect(error).to.equal(undefined)
+    expect(stdout).to.contain('CommerceFoundation_Ordering')
+  })
+
   it('shows the welcome banner with the total catalog count only on an interactive TTY', async () => {
     nock(CATALOG_HOST)
       .get(CATALOG_PATH)

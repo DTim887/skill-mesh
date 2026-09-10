@@ -24,13 +24,14 @@
     "eslint-config-oclif": "^6",
     "eslint-config-prettier": "^10",
     "mocha": "^11",
+    "nock": "^13",
     "oclif": "^4",
     "shx": "^0.3.3",
     "ts-node": "^10",
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "files": [
     "./bin",
@@ -51,7 +52,12 @@
     "plugins": [
       "@oclif/plugin-help"
     ],
-    "topicSeparator": " "
+    "topicSeparator": " ",
+    "topics": {
+      "domain": {
+        "description": "公司各部门/业务领域发布的知识库"
+      }
+    }
   },
   "repository": "DTim887/skill-mesh",
   "scripts": {

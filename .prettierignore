@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+oclif.manifest.json
+CHANGELOG.md

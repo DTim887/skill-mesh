@@ -1,0 +1,152 @@
+import {Errors} from '@oclif/core'
+import {createRequire} from 'node:module'
+
+import {getCatalogConfig} from './config.js'
+
+// `nock` (used in tests) monkeypatches the CJS `http`/`https` modules; an ESM `import` of those
+// built-ins captures a namespace that bypasses that patch, so `nock` silently fails to intercept
+// requests made through it. `createRequire` gets the same modules via the CJS path nock actually
+// patches, while still keeping full type information via `typeof import(...)`.
+const require = createRequire(import.meta.url)
+const http: typeof import('node:http') = require('node:http')
+const https: typeof import('node:https') = require('node:https')
+
+export type Domain = {
+  description: string
+  id: string
+  maintainer: string
+  name: string
+  repository: string
+  tags: string[]
+  version: string
+}
+
+export type SearchResult =
+  | {domains: Domain[]; kind: 'matches'}
+  | {kind: 'empty-catalog'}
+  | {kind: 'no-match'}
+
+type RawDomain = {
+  description?: unknown
+  maintainer?: unknown
+  name?: unknown
+  repository?: unknown
+  tags?: unknown
+  version?: unknown
+}
+
+type RawCatalog = {
+  domains?: Record<string, RawDomain>
+  schema_version?: unknown
+}
+
+const CONNECTION_ERROR_MESSAGE = '无法连接到知识库目录，请检查网络（是否已连接公司内网/VPN）后重试'
+const PARSE_ERROR_MESSAGE = '知识库目录数据异常，无法读取，请联系管理员'
+
+function toDomain(id: string, raw: RawDomain): Domain {
+  if (
+    typeof raw.name !== 'string' ||
+    typeof raw.description !== 'string' ||
+    typeof raw.repository !== 'string' ||
+    typeof raw.version !== 'string' ||
+    typeof raw.maintainer !== 'string'
+  ) {
+    throw new Errors.CLIError(PARSE_ERROR_MESSAGE, {code: 'CATALOG_PARSE_ERROR', exit: 1})
+  }
+
+  const tags = Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : []
+
+  return {
+    description: raw.description,
+    id,
+    maintainer: raw.maintainer,
+    name: raw.name,
+    repository: raw.repository,
+    tags,
+    version: raw.version,
+  }
+}
+
+function getBody(url: string, token: string | undefined): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('http://') ? http : https
+    const headers = token ? {Authorization: `Bearer ${token}`} : undefined
+
+    const request = client.get(url, {headers}, (response) => {
+      const status = response.statusCode ?? 0
+      if (status < 200 || status >= 300) {
+        response.resume()
+        reject(new Error(`unexpected status ${status}`))
+        return
+      }
+
+      let body = ''
+      response.setEncoding('utf8')
+      response.on('data', (chunk: string) => {
+        body += chunk
+      })
+      response.on('end', () => resolve(body))
+      response.on('error', reject)
+    })
+
+    request.on('error', reject)
+  })
+}
+
+export async function fetchCatalog(): Promise<Domain[]> {
+  const {token, url} = getCatalogConfig()
+
+  let body: string
+  try {
+    body = await getBody(url, token)
+  } catch {
+    throw new Errors.CLIError(CONNECTION_ERROR_MESSAGE, {code: 'CATALOG_CONNECTION_ERROR', exit: 1})
+  }
+
+  let raw: RawCatalog
+  try {
+    raw = JSON.parse(body) as RawCatalog
+  } catch {
+    throw new Errors.CLIError(PARSE_ERROR_MESSAGE, {code: 'CATALOG_PARSE_ERROR', exit: 1})
+  }
+
+  if (!raw.domains || typeof raw.domains !== 'object') {
+    throw new Errors.CLIError(PARSE_ERROR_MESSAGE, {code: 'CATALOG_PARSE_ERROR', exit: 1})
+  }
+
+  return Object.entries(raw.domains)
+    .map(([id, domain]) => toDomain(id, domain))
+    .sort((a, b) => a.id.localeCompare(b.id))
+}
+
+export function matchDomains(domains: Domain[], keyword: string): Domain[] {
+  const terms = keyword
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((term) => term.length > 0)
+
+  return domains.filter((domain) => {
+    const haystack = [domain.name, domain.description, ...domain.tags].join(' ').toLowerCase()
+    return terms.every((term) => haystack.includes(term))
+  })
+}
+
+export async function runSearch(keyword?: string): Promise<SearchResult> {
+  const domains = await fetchCatalog()
+
+  if (domains.length === 0) {
+    return {kind: 'empty-catalog'}
+  }
+
+  if (!keyword) {
+    return {domains, kind: 'matches'}
+  }
+
+  const matched = matchDomains(domains, keyword)
+
+  if (matched.length === 0) {
+    return {kind: 'no-match'}
+  }
+
+  return {domains: matched, kind: 'matches'}
+}

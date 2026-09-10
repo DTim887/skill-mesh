@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-09-10T00:00:00Z",
+  "domains": {
+    "growth": {
+      "name": "增长部门知识库",
+      "description": "增长团队的实验方法论与埋点规范",
+      "repository": "https://<内部地址>/domain-growth-kb",
+      "tags": ["growth", "experiment"],
+      "version": "1.0.0",
+      "maintainer": "growth-team"
+    }
+  }
+}

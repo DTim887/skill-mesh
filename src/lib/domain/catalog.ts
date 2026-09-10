@@ -1,4 +1,5 @@
 import {Errors} from '@oclif/core'
+import {HttpsProxyAgent} from 'https-proxy-agent'
 import {createRequire} from 'node:module'
 
 import {getCatalogConfig} from './config.js'
@@ -67,12 +68,25 @@ function toDomain(id: string, raw: RawDomain): Domain {
   }
 }
 
+// Node's http/https modules ignore HTTPS_PROXY/https_proxy by default (unlike curl or browsers),
+// so on a network that requires a proxy to reach the internet, direct requests fail or are
+// unreliable even though the target is genuinely reachable via the configured proxy.
+function resolveProxyUrl(targetUrl: string, env: NodeJS.ProcessEnv): string | undefined {
+  if (targetUrl.startsWith('http://')) {
+    return env.HTTP_PROXY || env.http_proxy
+  }
+
+  return env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy
+}
+
 function getBody(url: string, token: string | undefined): Promise<string> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('http://') ? http : https
     const headers = token ? {Authorization: `Bearer ${token}`} : undefined
+    const proxyUrl = resolveProxyUrl(url, process.env)
+    const agent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined
 
-    const request = client.get(url, {headers}, (response) => {
+    const request = client.get(url, {agent, headers}, (response) => {
       const status = response.statusCode ?? 0
       if (status < 200 || status >= 300) {
         response.resume()

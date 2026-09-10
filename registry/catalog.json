@@ -2,13 +2,21 @@
   "schema_version": "1.0",
   "updated_at": "2026-09-10T00:00:00Z",
   "domains": {
-    "growth": {
-      "name": "增长部门知识库",
-      "description": "增长团队的实验方法论与埋点规范",
+    "ordering": {
+      "name": "CommerceFoundation_Ordering",
+      "description": "Commerce Foundation Group Ordering 知识库",
       "repository": "https://<内部地址>/domain-growth-kb",
-      "tags": ["growth", "experiment"],
+      "tags": ["commerce foundation", "ordering"],
       "version": "1.0.0",
-      "maintainer": "growth-team"
+      "maintainer": "Unicorn"
+    },
+    "refund_exchange": {
+      "name": "CommerceFoundation_Refund&Exchange",
+      "description": "Commerce Foundation Group Refund&Exchange 知识库",
+      "repository": "https://<内部地址>/domain-growth-kb",
+      "tags": ["commerce foundation", "refund", "exchange"],
+      "version": "1.0.0",
+      "maintainer": "Unicorn"
     }
   }
 }

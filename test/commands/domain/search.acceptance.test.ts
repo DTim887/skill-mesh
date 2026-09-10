@@ -29,15 +29,17 @@ describe('domain search', () => {
     delete process.env.SKILLMESH_CATALOG_URL
   })
 
-  it('prints name and description when the keyword matches a domain (US1)', async () => {
+  it('prints name, description, tags, version and team when the keyword matches a domain (US1)', async () => {
     nock(CATALOG_HOST)
       .get(CATALOG_PATH)
       .reply(200, {
         domains: {
           growth: rawDomain({
             description: '增长团队的实验方法论与埋点规范',
+            maintainer: 'growth-team',
             name: '增长团队知识库',
             tags: ['growth', 'experiment'],
+            version: '2.1.0',
           }),
         },
       })
@@ -47,6 +49,43 @@ describe('domain search', () => {
     expect(error).to.equal(undefined)
     expect(stdout).to.contain('增长团队知识库')
     expect(stdout).to.contain('增长团队的实验方法论与埋点规范')
+    expect(stdout).to.contain('growth, experiment')
+    expect(stdout).to.contain('2.1.0')
+    expect(stdout).to.contain('growth-team')
+  })
+
+  it('shows the welcome banner with the total catalog count only on an interactive TTY', async () => {
+    nock(CATALOG_HOST)
+      .get(CATALOG_PATH)
+      .reply(200, {
+        domains: {
+          a: rawDomain({name: 'Domain A'}),
+          b: rawDomain({name: 'Domain B'}),
+        },
+      })
+
+    const original = process.stdout.isTTY
+    process.stdout.isTTY = true
+    let stdout: string
+    try {
+      ;({stdout} = await runCommand(['domain', 'search']))
+    } finally {
+      process.stdout.isTTY = original
+    }
+
+    expect(stdout).to.contain('============体验神奇，科技无限============')
+    expect(stdout).to.contain('欢迎访问领域知识库，目前注册的知识库有 2 个')
+  })
+
+  it('omits the welcome banner when stdout is not an interactive TTY', async () => {
+    nock(CATALOG_HOST)
+      .get(CATALOG_PATH)
+      .reply(200, {domains: {a: rawDomain({name: 'Domain A'})}})
+
+    const {stdout} = await runCommand(['domain', 'search'])
+
+    expect(stdout).to.not.contain('体验神奇')
+    expect(stdout).to.not.contain('欢迎访问领域知识库')
   })
 
   it('lists every domain when no keyword is given and the catalog is non-empty (US2)', async () => {

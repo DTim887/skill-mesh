@@ -1,6 +1,18 @@
 import {Args, Command} from '@oclif/core'
 
-import {runSearch} from '../../lib/domain/catalog.js'
+import {type Domain, runSearch} from '../../lib/domain/catalog.js'
+
+const BANNER_RULE = '============体验神奇，科技无限============'
+
+function formatDomain(domain: Domain): string {
+  return [
+    `名称    ${domain.name}`,
+    `描述    ${domain.description}`,
+    `标签    ${domain.tags.join(', ')}`,
+    `版本    ${domain.version}`,
+    `团队    ${domain.maintainer}`,
+  ].join('\n')
+}
 
 export default class DomainSearch extends Command {
   static override args = {
@@ -28,6 +40,12 @@ export default class DomainSearch extends Command {
 
     const result = await runSearch(args.keyword)
 
+    if (process.stdout.isTTY) {
+      this.log(BANNER_RULE)
+      this.log(`欢迎访问领域知识库，目前注册的知识库有 ${result.total} 个`)
+      this.log('')
+    }
+
     switch (result.kind) {
       case 'empty-catalog': {
         this.log('目前还没有知识库上架')
@@ -35,9 +53,7 @@ export default class DomainSearch extends Command {
       }
 
       case 'matches': {
-        this.log(
-          result.domains.map((domain) => `${domain.name}\n  ${domain.description}`).join('\n\n'),
-        )
+        this.log(result.domains.map((domain) => formatDomain(domain)).join('\n\n'))
         break
       }
 

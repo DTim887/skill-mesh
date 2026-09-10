@@ -23,9 +23,9 @@ export type Domain = {
 }
 
 export type SearchResult =
-  | {domains: Domain[]; kind: 'matches'}
-  | {kind: 'empty-catalog'}
-  | {kind: 'no-match'}
+  | {domains: Domain[]; kind: 'matches'; total: number}
+  | {kind: 'empty-catalog'; total: number}
+  | {kind: 'no-match'; total: number}
 
 type RawDomain = {
   description?: unknown
@@ -147,20 +147,21 @@ export function matchDomains(domains: Domain[], keyword: string): Domain[] {
 
 export async function runSearch(keyword?: string): Promise<SearchResult> {
   const domains = await fetchCatalog()
+  const total = domains.length
 
-  if (domains.length === 0) {
-    return {kind: 'empty-catalog'}
+  if (total === 0) {
+    return {kind: 'empty-catalog', total}
   }
 
   if (!keyword) {
-    return {domains, kind: 'matches'}
+    return {domains, kind: 'matches', total}
   }
 
   const matched = matchDomains(domains, keyword)
 
   if (matched.length === 0) {
-    return {kind: 'no-match'}
+    return {kind: 'no-match', total}
   }
 
-  return {domains: matched, kind: 'matches'}
+  return {domains: matched, kind: 'matches', total}
 }

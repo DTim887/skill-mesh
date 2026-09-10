@@ -161,22 +161,30 @@ describe('runSearch', () => {
     nock.cleanAll()
   })
 
-  it('returns matches when a keyword hits a domain', async () => {
+  it('returns matches when a keyword hits a domain, with total set to the full catalog size', async () => {
     nock(CATALOG_HOST)
       .get(CATALOG_PATH)
-      .reply(200, {domains: {growth: rawDomain({name: '增长团队知识库', tags: ['growth']})}})
+      .reply(200, {
+        domains: {
+          growth: rawDomain({name: '增长团队知识库', tags: ['growth']}),
+          infra: rawDomain({name: '基础设施知识库', tags: ['infra']}),
+        },
+      })
 
     const result = await runSearch('增长')
     expect(result.kind).to.equal('matches')
+    expect(result.total).to.equal(2)
+    expect(result.kind === 'matches' && result.domains).to.have.lengthOf(1)
   })
 
-  it('returns no-match when the keyword hits nothing in a non-empty catalog', async () => {
+  it('returns no-match when the keyword hits nothing in a non-empty catalog, with total set to the full catalog size', async () => {
     nock(CATALOG_HOST)
       .get(CATALOG_PATH)
       .reply(200, {domains: {growth: rawDomain({name: '增长团队知识库'})}})
 
     const result = await runSearch('火星殖民')
     expect(result.kind).to.equal('no-match')
+    expect(result.total).to.equal(1)
   })
 
   it('returns all domains as matches when no keyword is given and the catalog is non-empty', async () => {
@@ -187,6 +195,7 @@ describe('runSearch', () => {
     const result = await runSearch()
     expect(result.kind).to.equal('matches')
     expect(result.kind === 'matches' && result.domains).to.have.lengthOf(2)
+    expect(result.total).to.equal(2)
   })
 
   it('returns empty-catalog when the catalog has no domains, regardless of keyword', async () => {
@@ -194,6 +203,7 @@ describe('runSearch', () => {
 
     const result = await runSearch()
     expect(result.kind).to.equal('empty-catalog')
+    expect(result.total).to.equal(0)
   })
 
   it('returns empty-catalog rather than no-match when a keyword is given against an empty catalog', async () => {

@@ -37,7 +37,8 @@
   "files": [
     "./bin",
     "./dist",
-    "./oclif.manifest.json"
+    "./oclif.manifest.json",
+    "./resources"
   ],
   "homepage": "https://github.com/DTim887/skill-mesh",
   "keywords": [

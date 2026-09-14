@@ -67,7 +67,7 @@ EXAMPLES
     $ skillmesh domain search
 ```
 
-_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.0.0/src/commands/domain/search.ts)_
+_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.0.1/src/commands/domain/search.ts)_
 
 ## `skillmesh help [COMMAND]`
 
@@ -116,5 +116,5 @@ EXAMPLES
     $ skillmesh init myworkspace
 ```
 
-_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.0.0/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.0.1/src/commands/init.ts)_
 <!-- commandsstop -->

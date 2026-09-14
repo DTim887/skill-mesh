@@ -1,0 +1,7 @@
+#!/bin/sh
+# 测试用假 node：只响应 -v，版本号由环境变量控制（见 install.sh.test.sh）。
+if [ "$1" = "-v" ]; then
+  printf '%s\n' "${FAKE_NODE_VERSION:-v20.11.0}"
+  exit 0
+fi
+exit 1

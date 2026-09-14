@@ -1,0 +1,10 @@
+{
+  "tag_name": "v0.1.0",
+  "name": "v0.1.0",
+  "assets": [
+    {
+      "name": "skillmesh-0.1.0.tgz",
+      "browser_download_url": "https://github.com/DTim887/skill-mesh/releases/download/v0.1.0/skillmesh-0.1.0.tgz"
+    }
+  ]
+}

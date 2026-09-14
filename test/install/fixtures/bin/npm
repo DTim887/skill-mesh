@@ -1,0 +1,10 @@
+#!/bin/sh
+# 测试用假 npm：记录调用参数、按环境变量控制成功/失败（见 install.sh.test.sh）。
+if [ -n "${FAKE_NPM_CALL_LOG:-}" ]; then
+  echo "npm $*" >> "$FAKE_NPM_CALL_LOG"
+fi
+if [ "${FAKE_NPM_FAIL:-}" = "1" ]; then
+  echo "npm ERR! fake failure for testing" >&2
+  exit 1
+fi
+exit 0

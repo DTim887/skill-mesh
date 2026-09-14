@@ -1,0 +1,9 @@
+#!/bin/sh
+# 测试用假 skillmesh：模拟"已安装"场景下 `command -v skillmesh` 命中、`--version` 有输出。
+# 这个假二进制放在单独的 fixtures/installed-bin/ 目录，只有需要模拟"已安装"的用例才会把它
+# prepend 进 PATH（见 install.sh.test.sh），"未安装"用例的 PATH 里不包含它。
+if [ "$1" = "--version" ]; then
+  printf 'skillmesh/%s darwin-arm64 node-v20.11.0\n' "${FAKE_SKILLMESH_INSTALLED_VERSION:-0.1.0}"
+  exit 0
+fi
+exit 0

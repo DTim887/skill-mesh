@@ -41,8 +41,12 @@ $env:VERSION = "v0.1.0"; irm https://raw.githubusercontent.com/DTim887/skill-mes
 2. 执行：
 
    ```bash
-   npm install -g <上一步复制的下载地址>
+   npm install -g <上一步复制的下载地址> --allow-remote=all
    ```
+
+   > `--allow-remote=all` 是必需的：npm 12 起默认拒绝安装任何跟当前 registry 不同主机名的 tarball
+   > URL（我们的安装包挂在 `github.com` 的 Release 资源上），不加这个参数会报
+   > `EALLOWREMOTE`/"Refusing to fetch" 错误。
 
 ## 卸载
 
@@ -68,7 +72,7 @@ Node.js。
 
 `npm install -g` 默认会往系统全局目录写入文件，某些机器上的当前用户可能没有这个权限。可以尝试：
 
-- 在命令前加 `sudo`（macOS/Linux）：`sudo npm install -g <下载地址>`
+- 在命令前加 `sudo`（macOS/Linux）：`sudo npm install -g <下载地址> --allow-remote=all`
 - 或参考 npm 官方文档配置一个当前用户有写权限的全局安装目录
 
 ### 装完之后，命令行找不到 `skillmesh`

@@ -117,7 +117,11 @@ read_confirm() {
 
 do_install() {
   install_log="${TMPDIR:-/tmp}/skillmesh-install-$$.log"
-  if ! npm install -g "$TARGET_URL" >"$install_log" 2>&1; then
+  # npm 12 起，--allow-remote 默认是 none，会拒绝安装任何跟当前 registry 不同主机名的 tarball
+  # URL（我们的 tarball 挂在 github.com 的 Release 资源上，不是 registry.npmjs.org），必须显式
+  # 加 --allow-remote=all 才能装——这正是 npm 文档里说的"在明确要从某个 URL 安装时逐次显式放行"
+  # 的场景，实测在 npm 12.0.2 上复现过 EALLOWREMOTE 报错后确认。
+  if ! npm install -g "$TARGET_URL" --allow-remote=all >"$install_log" 2>&1; then
     fail "$EXIT_NPM_INSTALL" "安装失败，请检查网络连接或全局安装权限（必要时可尝试加 sudo 重试）。详细日志见：${install_log}"
   fi
   rm -f "$install_log"

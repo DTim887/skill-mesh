@@ -93,7 +93,11 @@ function Install-SkillMesh {
     param([string]$Url)
 
     $logFile = Join-Path $env:TEMP "skillmesh-install-$PID.log"
-    npm install -g $Url *> $logFile
+    # npm 12 起，--allow-remote 默认是 none，会拒绝安装任何跟当前 registry 不同主机名的 tarball
+    # URL（我们的 tarball 挂在 github.com 的 Release 资源上，不是 registry.npmjs.org），必须显式
+    # 加 --allow-remote=all 才能装（在 macOS 上用 npm 12.0.2 实测复现过 EALLOWREMOTE 报错后确认，
+    # 属于 npm 本身的行为，与操作系统无关）。
+    npm install -g $Url --allow-remote=all *> $logFile
 
     if ($LASTEXITCODE -ne 0) {
         Write-Fail $ExitNpmInstall "安装失败，请检查网络连接或全局安装权限。详细日志见：$logFile"

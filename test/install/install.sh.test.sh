@@ -138,8 +138,10 @@ assert_contains "空输入提示已取消" "$(output)" "已取消"
 assert_file_missing "空输入不应调用 npm" "$WORKDIR/npm-calls.log"
 
 # ---- 用例 6：无可用真实终端（/dev/tty 不可用）时按同意继续（FR-016） ----
+# 用一个父目录都不存在的路径，确保 `exec 3<>` 真的打开失败（而不是像 `<>` 对普通文件那样
+# 顺手把它创建出来，见 install.sh 里 read_confirm 的说明）。
 reset_env
-SKILLMESH_INSTALL_TEST_TTY="$WORKDIR/does-not-exist"
+SKILLMESH_INSTALL_TEST_TTY="$WORKDIR/no-such-dir/tty"
 export SKILLMESH_INSTALL_TEST_TTY
 run_install
 assert_exit_code "无可用终端时按同意继续，退出码为 0" "$(exit_code)" 0

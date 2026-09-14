@@ -79,16 +79,32 @@ detect_installed() {
 # $1: 提示文案（含 "(y/N) " 后缀）；返回 0 表示同意，非 0 表示拒绝
 #
 # 读取来源固定是 /dev/tty（而非标准输入），确保通过管道执行（curl ... | sh）时确认交互依然生效
-# （FR-016）。SKILLMESH_INSTALL_TEST_TTY 是仅供 test/install/install.sh.test.sh 使用的测试专用
-# 覆盖点——不是面向真实用户的接口，正常使用时不会设置这个变量，行为与文档一致。
+# （FR-016）。用 `exec 3<>"$tty_source"` 而不是 `[ -r "$tty_source" ]` 判断终端是否真的可用——
+# 实测发现 `/dev/tty` 在某些没有关联控制终端的进程里（如某些沙箱/无终端的自动化执行环境）权限位
+# 检测（-r）会通过，但实际打开/读取会失败（"Device not configured"），如果只用 -r 判断会把"终端
+# 根本不可用"误判成用户输入了空内容从而当作拒绝确认处理，而不是 FR-016 要求的"按同意继续"。
+# `exec` 尝试真正打开这个设备/文件，能准确区分这两种情况。
+#
+# SKILLMESH_INSTALL_TEST_TTY 是仅供 test/install/install.sh.test.sh 使用的测试专用覆盖点——不是
+# 面向真实用户的接口，正常使用时不会设置这个变量，行为与文档一致。
 read_confirm() {
   tty_source="${SKILLMESH_INSTALL_TEST_TTY:-/dev/tty}"
-  if [ -r "$tty_source" ]; then
+
+  # `exec` 的重定向会持久作用于当前进程（这正是需要它来打开一个之后还能用的 fd 3 的原因），
+  # 所以打开失败时 shell 自身打印的诊断信息（如 "Device not configured"）不能直接在这一行用
+  # `2>/dev/null` 屏蔽——那样会把进程的 fd 2（标准错误）永久性地重定向到 /dev/null，导致脚本
+  # 后续所有面向用户的错误提示（fail() 里的 printf ... >&2）都发不出去。正确做法是先把真正的
+  # fd 2 保存到 fd 4，临时把 fd 2 指向 /dev/null，尝试完之后再恢复。
+  exec 4>&2 2>/dev/null
+  if exec 3<>"$tty_source"; then
+    exec 2>&4 4>&-
     printf '%s' "$1"
-    if ! read -r answer < "$tty_source"; then
+    if ! read -r answer <&3; then
       answer=""
     fi
+    exec 3<&-
   else
+    exec 2>&4 4>&-
     # 无可用真实终端（如脚本被用在非交互自动化场景）：视为非交互环境，按同意继续（FR-016）
     return 0
   fi

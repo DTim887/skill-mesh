@@ -73,7 +73,7 @@ EXAMPLES
     $ skillmesh domain add ordering --tag 0.9.0
 ```
 
-_See code: [src/commands/domain/add.ts](https://github.com/DTim887/skill-mesh/blob/v0.1.0/src/commands/domain/add.ts)_
+_See code: [src/commands/domain/add.ts](https://github.com/DTim887/skill-mesh/blob/v0.2.0/src/commands/domain/add.ts)_
 
 ## `skillmesh domain search [KEYWORD]`
 
@@ -101,7 +101,7 @@ EXAMPLES
     $ skillmesh domain search
 ```
 
-_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.1.0/src/commands/domain/search.ts)_
+_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.2.0/src/commands/domain/search.ts)_
 
 ## `skillmesh help [COMMAND]`
 
@@ -150,5 +150,5 @@ EXAMPLES
     $ skillmesh init myworkspace
 ```
 
-_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.1.0/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.2.0/src/commands/init.ts)_
 <!-- commandsstop -->

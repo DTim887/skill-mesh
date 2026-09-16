@@ -13,7 +13,7 @@
     "refund_exchange": {
       "name": "CommerceFoundation_Refund&Exchange",
       "description": "Commerce Foundation Group Refund&Exchange 知识库",
-      "repository": "https://<内部地址>/domain-growth-kb",
+      "repository": "https://github.com/DTim887/skill-mesh-refund",
       "tags": ["commerce foundation", "refund", "exchange"],
       "version": "1.0.0",
       "maintainer": "Unicorn"

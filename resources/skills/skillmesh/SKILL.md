@@ -1,6 +1,6 @@
 ---
 name: skillmesh
-description: 帮助用户在当前工作区里搜索并即将支持安装/卸载公司各部门发布的知识库（Domain）。当用户提到"skillmesh"、"知识库"、"domain"，或想知道公司有没有某个领域的现成知识库时使用。
+description: 帮助用户在当前工作区里搜索、安装公司各部门发布的知识库（Domain）。当用户提到"skillmesh"、"知识库"、"domain"，或想知道公司有没有某个领域的现成知识库时使用。
 ---
 
 # SkillMesh
@@ -25,6 +25,24 @@ description: 帮助用户在当前工作区里搜索并即将支持安装/卸载
 **什么时候用这个命令**：用户想知道"公司是否已经有人做过某个领域的知识库"、想在安装前先确认有没有
 相关内容时。
 
+### `skillmesh domain add <id> [--tag <版本>]`
+
+把一个 Domain 知识库真正装进当前工作区——按 `id`（用 `domain search` 先查到）从中心目录拿到来源
+仓库和默认版本，拉取该仓库的知识描述文件，生成一份 Claude Code 能读的技能文档写入
+`.claude/skills/<id>-knowledge/SKILL.md`，并在工作区安装记录里留痕。
+
+- 必须先执行过 `skillmesh init`；当前目录不在工作区里会报错并提示先初始化。
+- `<id>` 必须是 `domain search` 能搜到的真实 id，不存在的 id 会报错提示"未找到该 Domain"。
+- 不带 `--tag`：装中心目录记录的默认版本；带 `--tag <版本号>`：显式指定安装某个历史版本。
+- 执行前会有交互式确认，展示即将安装的名称、版本、写入路径；这是一个需要人在终端里手动确认的
+  命令，不支持非交互跳过。
+- 同一个 `id` 只能装一次——已经装过的 domain 再次执行会直接报错"已经安装过"，不会覆盖，也没有
+  `remove`/`update` 命令可用（这两个命令目前还没有实现，见下方"尚未实现的命令"）。
+- 一次只能装一个 id，不支持批量安装。
+
+**什么时候用这个命令**：用户已经用 `domain search` 确认某个 Domain 存在、并明确表示要把它装进当前
+工作区时；如果用户还没确认过要装哪个 Domain，先引导用户用 `domain search` 查。
+
 ### `skillmesh init [名称]`
 
 初始化一个本地工作区（类似 `git init`），是使用 `skillmesh` 其他功能的前提。
@@ -40,13 +58,14 @@ description: 帮助用户在当前工作区里搜索并即将支持安装/卸载
 
 ## 尚未实现的命令（不要假装它们存在）
 
-`domain install`、`domain uninstall`、`domain update` 等安装/卸载类命令**目前还没有实现**，属于
-后续规划。如果用户想执行这类操作，如实告知"这个功能还在开发中，目前 skillmesh 只支持
-`domain search`（搜索）和 `init`（初始化工作区）"，不要编造这些命令的用法或假装帮用户执行了它们。
+`domain remove`、`domain update`、`skill add` 等命令**目前还没有实现**，属于后续规划。如果用户
+想执行这类操作（如"卸载这个知识库""换个版本"），如实告知"这个功能还在开发中，目前 skillmesh 只
+支持 `domain search`（搜索）、`domain add`（安装）和 `init`（初始化工作区）"，不要编造这些命令的
+用法或假装帮用户执行了它们。
 
 ## 使用建议
 
 - 帮用户判断"要不要装某个 Domain"时，先用 `domain search` 查，把搜到的名称、描述、标签原样告诉
-  用户，不要替用户做主观判断"这个适不适合"。
-- 如果用户的操作依赖工作区（未来的 `domain install` 等），而当前目录看起来还没有 `.skillmesh/`
-  标记，提醒用户先运行 `skillmesh init`。
+  用户，不要替用户做主观判断"这个适不适合"；用户确认要装之后再用 `domain add <id>`。
+- 如果用户想执行 `domain add`，而当前目录看起来还没有 `.skillmesh/` 标记，提醒用户先运行
+  `skillmesh init`。

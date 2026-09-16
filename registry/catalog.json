@@ -5,7 +5,7 @@
     "ordering": {
       "name": "CommerceFoundation_Ordering",
       "description": "Commerce Foundation Group Ordering 知识库",
-      "repository": "https://<内部地址>/domain-growth-kb",
+      "repository": "https://github.com/DTim887/skill-mesh-ordering",
       "tags": ["commerce foundation", "ordering"],
       "version": "1.0.0",
       "maintainer": "Unicorn"

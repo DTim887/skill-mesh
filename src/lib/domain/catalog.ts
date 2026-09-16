@@ -79,7 +79,20 @@ function resolveProxyUrl(targetUrl: string, env: NodeJS.ProcessEnv): string | un
   return env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy
 }
 
-function getBody(url: string, token: string | undefined): Promise<string> {
+// Thrown by `fetchText` when a response actually came back with a non-2xx status — distinct from
+// a connection-level failure (DNS, refused, timeout, ...) where no status was ever received.
+// `manifest.ts` uses `statusCode` to tell "this specific tag doesn't exist" (404) apart from a
+// generic network problem; `catalog.ts` itself doesn't need the distinction and keeps collapsing
+// both into one friendly message.
+export class HttpStatusError extends Error {
+  constructor(public statusCode: number) {
+    super(`unexpected status ${statusCode}`)
+  }
+}
+
+// Shared with `manifest.ts` (domain repository manifest fetches use the exact same proxy-aware,
+// nock-compatible HTTP GET as the catalog itself), not catalog-specific despite living here.
+export function fetchText(url: string, token?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('http://') ? http : https
     const headers = token ? {Authorization: `Bearer ${token}`} : undefined
@@ -90,7 +103,7 @@ function getBody(url: string, token: string | undefined): Promise<string> {
       const status = response.statusCode ?? 0
       if (status < 200 || status >= 300) {
         response.resume()
-        reject(new Error(`unexpected status ${status}`))
+        reject(new HttpStatusError(status))
         return
       }
 
@@ -112,7 +125,7 @@ export async function fetchCatalog(): Promise<Domain[]> {
 
   let body: string
   try {
-    body = await getBody(url, token)
+    body = await fetchText(url, token)
   } catch {
     throw new Errors.CLIError(CONNECTION_ERROR_MESSAGE, {code: 'CATALOG_CONNECTION_ERROR', exit: 1})
   }
@@ -131,6 +144,10 @@ export async function fetchCatalog(): Promise<Domain[]> {
   return Object.entries(raw.domains)
     .map(([id, domain]) => toDomain(id, domain))
     .sort((a, b) => a.id.localeCompare(b.id))
+}
+
+export function findDomainById(domains: Domain[], id: string): Domain | undefined {
+  return domains.find((domain) => domain.id === id)
 }
 
 export function matchDomains(domains: Domain[], keyword: string): Domain[] {

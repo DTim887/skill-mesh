@@ -2,7 +2,7 @@ import {Errors} from '@oclif/core'
 import {expect} from 'chai'
 import nock from 'nock'
 
-import {type Domain, fetchCatalog, matchDomains, runSearch} from '../../../src/lib/domain/catalog.js'
+import {type Domain, fetchCatalog, findDomainById, matchDomains, runSearch} from '../../../src/lib/domain/catalog.js'
 
 const CATALOG_HOST = 'https://internal-git-host.example'
 const CATALOG_PATH = '/raw/org/skill-mesh/main/registry/catalog.json'
@@ -105,6 +105,37 @@ describe('fetchCatalog', () => {
 
     await fetchCatalog()
     expect(scope.isDone()).to.equal(true)
+  })
+})
+
+describe('findDomainById', () => {
+  const domains: Domain[] = [
+    {
+      description: 'd',
+      id: 'growth',
+      maintainer: 'm',
+      name: 'n',
+      repository: 'r',
+      tags: [],
+      version: '1.0.0',
+    },
+    {
+      description: 'd',
+      id: 'ordering',
+      maintainer: 'm',
+      name: 'n',
+      repository: 'r',
+      tags: [],
+      version: '1.0.0',
+    },
+  ]
+
+  it('returns the domain whose id matches', () => {
+    expect(findDomainById(domains, 'ordering')?.id).to.equal('ordering')
+  })
+
+  it('returns undefined when no domain matches', () => {
+    expect(findDomainById(domains, 'does-not-exist')).to.equal(undefined)
   })
 })
 

@@ -38,6 +38,7 @@ irm https://raw.githubusercontent.com/DTim887/skill-mesh/main/install.ps1 | iex
 # Commands
 <!-- commands -->
 * [`skillmesh domain add ID`](#skillmesh-domain-add-id)
+* [`skillmesh domain remove ID`](#skillmesh-domain-remove-id)
 * [`skillmesh domain search [KEYWORD]`](#skillmesh-domain-search-keyword)
 * [`skillmesh help [COMMAND]`](#skillmesh-help-command)
 * [`skillmesh init [NAME]`](#skillmesh-init-name)
@@ -73,7 +74,32 @@ EXAMPLES
     $ skillmesh domain add ordering --tag 0.9.0
 ```
 
-_See code: [src/commands/domain/add.ts](https://github.com/DTim887/skill-mesh/blob/v0.2.0/src/commands/domain/add.ts)_
+_See code: [src/commands/domain/add.ts](https://github.com/DTim887/skill-mesh/blob/v0.3.0/src/commands/domain/add.ts)_
+
+## `skillmesh domain remove ID`
+
+从当前工作区卸载一个已安装的 Domain 知识库。
+
+```
+USAGE
+  $ skillmesh domain remove ID
+
+ARGUMENTS
+  ID  要卸载的 Domain id，对应工作区安装记录里已存在的 id
+
+DESCRIPTION
+  从当前工作区卸载一个已安装的 Domain 知识库。
+
+  按工作区安装记录找到该 id 关联的文件，确认后逐一删除、清理变空的目录，并从安装记录中移除。
+  全程不需要网络访问。已缺失的文件会被容忍跳过，不会因此导致整个命令失败。
+
+EXAMPLES
+  卸载已安装的 ordering 这个 Domain
+
+    $ skillmesh domain remove ordering
+```
+
+_See code: [src/commands/domain/remove.ts](https://github.com/DTim887/skill-mesh/blob/v0.3.0/src/commands/domain/remove.ts)_
 
 ## `skillmesh domain search [KEYWORD]`
 
@@ -101,7 +127,7 @@ EXAMPLES
     $ skillmesh domain search
 ```
 
-_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.2.0/src/commands/domain/search.ts)_
+_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.3.0/src/commands/domain/search.ts)_
 
 ## `skillmesh help [COMMAND]`
 
@@ -150,5 +176,5 @@ EXAMPLES
     $ skillmesh init myworkspace
 ```
 
-_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.2.0/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.3.0/src/commands/init.ts)_
 <!-- commandsstop -->

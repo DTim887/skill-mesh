@@ -1,7 +1,7 @@
 {
   "name": "skillmesh",
   "description": "A new CLI for SHDR generated with oclif",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "author": "@DTim887",
   "bin": {
     "skillmesh": "./bin/run.js"

@@ -37,9 +37,43 @@ irm https://raw.githubusercontent.com/DTim887/skill-mesh/main/install.ps1 | iex
 ```
 # Commands
 <!-- commands -->
+* [`skillmesh domain add ID`](#skillmesh-domain-add-id)
 * [`skillmesh domain search [KEYWORD]`](#skillmesh-domain-search-keyword)
 * [`skillmesh help [COMMAND]`](#skillmesh-help-command)
 * [`skillmesh init [NAME]`](#skillmesh-init-name)
+
+## `skillmesh domain add ID`
+
+将一个 Domain 知识库安装进当前工作区。
+
+```
+USAGE
+  $ skillmesh domain add ID [--tag <value>]
+
+ARGUMENTS
+  ID  要安装的 Domain id，对应中心知识库目录里登记的 id
+
+FLAGS
+  --tag=<value>  显式指定要安装的版本（不传则使用中心知识库目录记录的默认版本）
+
+DESCRIPTION
+  将一个 Domain 知识库安装进当前工作区。
+
+  按 id 从中心知识库目录查到来源仓库与默认版本，拉取该仓库对应版本的 manifest 后，
+  合成一份技能文档写入工作区，并在安装记录中留痕。已经安装过的 id 会被拒绝，不做覆盖，
+  如需切换版本请联系维护者了解后续的更新能力。
+
+EXAMPLES
+  安装 ordering 这个 Domain 的默认版本
+
+    $ skillmesh domain add ordering
+
+  显式安装 ordering 的 0.9.0 版本，而不是默认版本
+
+    $ skillmesh domain add ordering --tag 0.9.0
+```
+
+_See code: [src/commands/domain/add.ts](https://github.com/DTim887/skill-mesh/blob/v0.1.0/src/commands/domain/add.ts)_
 
 ## `skillmesh domain search [KEYWORD]`
 
@@ -67,7 +101,7 @@ EXAMPLES
     $ skillmesh domain search
 ```
 
-_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.0.2/src/commands/domain/search.ts)_
+_See code: [src/commands/domain/search.ts](https://github.com/DTim887/skill-mesh/blob/v0.1.0/src/commands/domain/search.ts)_
 
 ## `skillmesh help [COMMAND]`
 
@@ -116,5 +150,5 @@ EXAMPLES
     $ skillmesh init myworkspace
 ```
 
-_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.0.2/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/DTim887/skill-mesh/blob/v0.1.0/src/commands/init.ts)_
 <!-- commandsstop -->

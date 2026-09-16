@@ -58,6 +58,7 @@ function withFixedAnswer(answer: string) {
 }
 
 const SKILL_PATH_SEGMENTS = ['.claude', 'skills', 'ordering-knowledge', 'SKILL.md']
+const CURSOR_SKILL_PATH_SEGMENTS = ['.cursor', 'skills', 'ordering-knowledge', 'SKILL.md']
 
 describe('domain add', () => {
   let originalCwd: string
@@ -95,10 +96,13 @@ describe('domain add', () => {
 
     expect(error).to.equal(undefined)
     const skillPath = path.join(workDir, ...SKILL_PATH_SEGMENTS)
+    const cursorSkillPath = path.join(workDir, ...CURSOR_SKILL_PATH_SEGMENTS)
     expect(existsSync(skillPath)).to.equal(true)
+    expect(existsSync(cursorSkillPath)).to.equal(true)
     const skillContent = readFileSync(skillPath, 'utf8')
     expect(skillContent).to.include('# CommerceFoundation_Ordering')
     expect(skillContent).to.include('**版本**：1.0.0')
+    expect(readFileSync(cursorSkillPath, 'utf8')).to.equal(skillContent)
 
     const registry = JSON.parse(readFileSync(path.join(workDir, '.skillmesh', 'registry.json'), 'utf8'))
     expect(registry.installed).to.have.lengthOf(1)
@@ -108,8 +112,26 @@ describe('domain add', () => {
       type: 'domain',
       version: '1.0.0',
     })
-    expect(registry.installed[0].files).to.deep.equal(['.claude/skills/ordering-knowledge/SKILL.md'])
+    expect(registry.installed[0].files).to.deep.equal([
+      '.claude/skills/ordering-knowledge/SKILL.md',
+      '.cursor/skills/ordering-knowledge/SKILL.md',
+    ])
     expect(stdout).to.include('安装完成')
+    expect(stdout).to.include('.claude/skills/ordering-knowledge/SKILL.md')
+    expect(stdout).to.include('.cursor/skills/ordering-knowledge/SKILL.md')
+  })
+
+  it('lists both target paths in the pre-install confirmation prompt (US1 Acceptance Scenario 2)', async () => {
+    nock(CATALOG_HOST).get(CATALOG_PATH).reply(200, rawCatalog())
+    nock(RAW_HOST).get('/DTim887/skill-mesh-ordering/v1.0.0/manifest.json').reply(200, rawManifest())
+    const {ask} = withFixedAnswer('y')
+    setAsk(ask)
+
+    const {stdout} = await runCommand(['domain', 'add', 'ordering'])
+
+    expect(stdout).to.include('将写入')
+    expect(stdout).to.include('.claude/skills/ordering-knowledge/SKILL.md')
+    expect(stdout).to.include('.cursor/skills/ordering-knowledge/SKILL.md')
   })
 
   it('makes no disk changes when the user declines the confirmation (US1)', async () => {
@@ -122,6 +144,7 @@ describe('domain add', () => {
 
     expect(error).to.equal(undefined)
     expect(existsSync(path.join(workDir, ...SKILL_PATH_SEGMENTS))).to.equal(false)
+    expect(existsSync(path.join(workDir, ...CURSOR_SKILL_PATH_SEGMENTS))).to.equal(false)
     const registry = JSON.parse(readFileSync(path.join(workDir, '.skillmesh', 'registry.json'), 'utf8'))
     expect(registry.installed).to.deep.equal([])
   })
@@ -172,7 +195,10 @@ describe('domain add', () => {
     const existingRegistry = {
       installed: [
         {
-          files: ['.claude/skills/ordering-knowledge/SKILL.md'],
+          files: [
+            '.claude/skills/ordering-knowledge/SKILL.md',
+            '.cursor/skills/ordering-knowledge/SKILL.md',
+          ],
           id: 'ordering',
           'installed_at': '2026-09-01T00:00:00Z',
           repository: REPOSITORY,

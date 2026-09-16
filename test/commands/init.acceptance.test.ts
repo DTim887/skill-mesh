@@ -1,6 +1,6 @@
 import {runCommand} from '@oclif/test'
 import {expect} from 'chai'
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync} from 'node:fs'
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
 
@@ -58,10 +58,49 @@ describe('init', () => {
 
     expect(error).to.equal(undefined)
     expect(existsSync(path.join(workDir, '.skillmesh', 'registry.json'))).to.equal(true)
+    expect(existsSync(path.join(workDir, '.skillmesh', 'scripts', 'fetch-confluence.mjs'))).to.equal(true)
     expect(existsSync(path.join(workDir, '.claude', 'skills', 'skillmesh', 'SKILL.md'))).to.equal(true)
+    expect(existsSync(path.join(workDir, '.cursor', 'skills', 'skillmesh', 'SKILL.md'))).to.equal(true)
 
     const registry = JSON.parse(readFileSync(path.join(workDir, '.skillmesh', 'registry.json'), 'utf8'))
     expect(registry).to.deep.equal({installed: [], 'schema_version': '1.0'})
+
+    const claudeSkill = readFileSync(path.join(workDir, '.claude', 'skills', 'skillmesh', 'SKILL.md'), 'utf8')
+    const cursorSkill = readFileSync(path.join(workDir, '.cursor', 'skills', 'skillmesh', 'SKILL.md'), 'utf8')
+    expect(claudeSkill).to.include('Claude Code')
+    expect(cursorSkill).to.include('Cursor')
+  })
+
+  it('succeeds and leaves pre-existing unrelated .cursor/ content untouched (US2)', async () => {
+    mkdirSync(path.join(workDir, '.cursor', 'rules'), {recursive: true})
+    writeFileSync(path.join(workDir, '.cursor', 'rules', 'my-rule.mdc'), 'existing content', 'utf8')
+
+    const {ask} = withFixedAnswer('y')
+    setAsk(ask)
+
+    const {error} = await runCommand(['init'])
+
+    expect(error).to.equal(undefined)
+    expect(existsSync(path.join(workDir, '.cursor', 'skills', 'skillmesh', 'SKILL.md'))).to.equal(true)
+    expect(readFileSync(path.join(workDir, '.cursor', 'rules', 'my-rule.mdc'), 'utf8')).to.equal(
+      'existing content',
+    )
+  })
+
+  it('succeeds and leaves pre-existing unrelated .claude/ content untouched (symmetric case, US2)', async () => {
+    mkdirSync(path.join(workDir, '.claude', 'commands'), {recursive: true})
+    writeFileSync(path.join(workDir, '.claude', 'commands', 'my-command.md'), 'existing content', 'utf8')
+
+    const {ask} = withFixedAnswer('y')
+    setAsk(ask)
+
+    const {error} = await runCommand(['init'])
+
+    expect(error).to.equal(undefined)
+    expect(existsSync(path.join(workDir, '.claude', 'skills', 'skillmesh', 'SKILL.md'))).to.equal(true)
+    expect(readFileSync(path.join(workDir, '.claude', 'commands', 'my-command.md'), 'utf8')).to.equal(
+      'existing content',
+    )
   })
 
   it('makes no disk changes and exits 0 when the user declines (US1)', async () => {

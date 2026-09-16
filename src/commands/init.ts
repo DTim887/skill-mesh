@@ -2,6 +2,7 @@ import {Args, Command, Errors} from '@oclif/core'
 import {existsSync} from 'node:fs'
 import path from 'node:path'
 
+import {SKILL_TARGETS} from '../lib/skill-targets.js'
 import {confirmYesNo, isInteractiveTerminal} from '../lib/workspace/confirm.js'
 import {createWorkspace} from '../lib/workspace/create.js'
 import {isWorkspaceMarked, resolveTargetRoot, validateName} from '../lib/workspace/paths.js'
@@ -50,7 +51,11 @@ export default class Init extends Command {
       }
     }
 
-    const filesToCreate = ['.skillmesh/registry.json', '.claude/skills/skillmesh/SKILL.md']
+    const filesToCreate = [
+      '.skillmesh/registry.json',
+      '.skillmesh/scripts/fetch-confluence.mjs',
+      ...SKILL_TARGETS.map((target) => `${target.skillsDir}/skillmesh/SKILL.md`),
+    ]
     this.log(`即将在以下路径初始化 skillmesh 工作区：\n  ${root}\n\n将写入以下文件：\n${filesToCreate.map((f) => `  ${f}`).join('\n')}\n`)
 
     const proceed = await confirmYesNo('是否继续？(y/N) ')
@@ -60,7 +65,8 @@ export default class Init extends Command {
     }
 
     const skillTemplatePath = path.join(this.config.root, 'resources/skills/skillmesh/SKILL.md')
-    await createWorkspace(root, skillTemplatePath)
+    const fetchConfluenceScriptPath = path.join(this.config.root, 'resources/scripts/fetch-confluence.mjs')
+    await createWorkspace(root, SKILL_TARGETS, skillTemplatePath, fetchConfluenceScriptPath)
     this.log(`工作区初始化完成：${root}`)
   }
 }

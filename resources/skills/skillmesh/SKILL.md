@@ -6,8 +6,8 @@ description: 帮助用户在当前工作区里搜索、安装公司各部门发�
 # SkillMesh
 
 `skillmesh` 是一个内部 CLI 工具，让公司各部门/业务领域沉淀的 AI 知识库（称为 Domain）可以像安装
-软件包一样被发现和使用。这份 SKILL 描述了当前实际可用的命令，帮助你（Claude Code）在用户请求相关
-操作时知道该调用哪个命令、怎么解读结果。
+软件包一样被发现和使用。这份 SKILL 描述了当前实际可用的命令，帮助你（{{AGENT_NAME}}）在用户请求
+相关操作时知道该调用哪个命令、怎么解读结果。
 
 ## 当前可用命令
 
@@ -28,8 +28,9 @@ description: 帮助用户在当前工作区里搜索、安装公司各部门发�
 ### `skillmesh domain add <id> [--tag <版本>]`
 
 把一个 Domain 知识库真正装进当前工作区——按 `id`（用 `domain search` 先查到）从中心目录拿到来源
-仓库和默认版本，拉取该仓库的知识描述文件，生成一份 Claude Code 能读的技能文档写入
-`.claude/skills/<id>-knowledge/SKILL.md`，并在工作区安装记录里留痕。
+仓库和默认版本，拉取该仓库的知识描述文件，生成 Claude Code 和 Cursor 都能读的技能文档，分别写入
+`.claude/skills/<id>-knowledge/SKILL.md` 和 `.cursor/skills/<id>-knowledge/SKILL.md`，并在工作区
+安装记录里留痕。
 
 - 必须先执行过 `skillmesh init`；当前目录不在工作区里会报错并提示先初始化。
 - `<id>` 必须是 `domain search` 能搜到的真实 id，不存在的 id 会报错提示"未找到该 Domain"。

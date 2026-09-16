@@ -4,6 +4,7 @@ import {fetchCatalog, findDomainById} from '../../lib/domain/catalog.js'
 import {fetchManifest, validateManifest} from '../../lib/domain/manifest.js'
 import {appendInstalledRecord, isDomainInstalled, readRegistry} from '../../lib/domain/registry.js'
 import {renderSkillMarkdown} from '../../lib/domain/render.js'
+import {SKILL_TARGETS} from '../../lib/skill-targets.js'
 import {confirmYesNo, isInteractiveTerminal} from '../../lib/workspace/confirm.js'
 import {findWorkspaceRoot} from '../../lib/workspace/paths.js'
 
@@ -67,10 +68,10 @@ export default class DomainAdd extends Command {
     }
 
     const skillDirName = `${args.id}-knowledge`
-    const relativeSkillPath = `.claude/skills/${skillDirName}/SKILL.md`
+    const relativeSkillPaths = SKILL_TARGETS.map((target) => `${target.skillsDir}/${skillDirName}/SKILL.md`)
 
     this.log(
-      `即将安装：${manifest.name}\n版本：${targetVersion}\n将写入：${relativeSkillPath}\n`,
+      `即将安装：${manifest.name}\n版本：${targetVersion}\n将写入：\n${relativeSkillPaths.map((p) => `  ${p}`).join('\n')}\n`,
     )
 
     const proceed = await confirmYesNo('是否继续？(y/N) ')
@@ -83,17 +84,17 @@ export default class DomainAdd extends Command {
     await appendInstalledRecord(
       root,
       {
-        files: [relativeSkillPath],
+        files: relativeSkillPaths,
         id: args.id,
         'installed_at': new Date().toISOString(),
         repository: domain.repository,
         type: 'domain',
         version: targetVersion,
       },
-      skillDirName,
-      skillMarkdown,
+      SKILL_TARGETS,
+      {content: skillMarkdown, dirName: skillDirName},
     )
 
-    this.log(`安装完成：${relativeSkillPath}`)
+    this.log(`安装完成：\n${relativeSkillPaths.map((p) => `  ${p}`).join('\n')}`)
   }
 }

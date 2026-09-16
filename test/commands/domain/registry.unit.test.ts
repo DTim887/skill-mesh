@@ -4,6 +4,7 @@ import {tmpdir} from 'node:os'
 import path from 'node:path'
 
 import {appendInstalledRecord, isDomainInstalled, readRegistry} from '../../../src/lib/domain/registry.js'
+import {SKILL_TARGETS} from '../../../src/lib/skill-targets.js'
 
 const INITIAL_REGISTRY = `${JSON.stringify({installed: [], 'schema_version': '1.0'}, null, 2)}\n`
 
@@ -49,32 +50,42 @@ describe('domain/registry', () => {
   })
 
   describe('appendInstalledRecord', () => {
-    it('writes the skill file and appends the registry record on success', async () => {
+    it('writes the skill file to every target and appends the registry record on success', async () => {
       await appendInstalledRecord(
         root,
         {
-          files: ['.claude/skills/ordering-knowledge/SKILL.md'],
+          files: [
+            '.claude/skills/ordering-knowledge/SKILL.md',
+            '.cursor/skills/ordering-knowledge/SKILL.md',
+          ],
           id: 'ordering',
           'installed_at': '2026-09-16T00:00:00Z',
           repository: 'https://github.com/DTim887/skill-mesh-ordering',
           type: 'domain',
           version: '1.0.0',
         },
-        'ordering-knowledge',
-        '# fixture skill content\n',
+        SKILL_TARGETS,
+        {content: '# fixture skill content\n', dirName: 'ordering-knowledge'},
       )
 
-      const skillPath = path.join(root, '.claude', 'skills', 'ordering-knowledge', 'SKILL.md')
-      expect(existsSync(skillPath)).to.equal(true)
-      expect(readFileSync(skillPath, 'utf8')).to.equal('# fixture skill content\n')
+      const claudePath = path.join(root, '.claude', 'skills', 'ordering-knowledge', 'SKILL.md')
+      const cursorPath = path.join(root, '.cursor', 'skills', 'ordering-knowledge', 'SKILL.md')
+      expect(existsSync(claudePath)).to.equal(true)
+      expect(existsSync(cursorPath)).to.equal(true)
+      expect(readFileSync(claudePath, 'utf8')).to.equal('# fixture skill content\n')
+      expect(readFileSync(cursorPath, 'utf8')).to.equal(readFileSync(claudePath, 'utf8'))
 
       const registry = JSON.parse(readFileSync(path.join(root, '.skillmesh', 'registry.json'), 'utf8'))
       expect(registry.installed).to.have.lengthOf(1)
       expect(registry.installed[0].id).to.equal('ordering')
+      expect(registry.installed[0].files).to.deep.equal([
+        '.claude/skills/ordering-knowledge/SKILL.md',
+        '.cursor/skills/ordering-knowledge/SKILL.md',
+      ])
     })
 
-    it('leaves no artifacts behind and does not touch the existing registry when the second rename fails', async () => {
-      // Force the second rename (temp registry.json -> real registry.json) to fail with a real,
+    it('rolls back every target directory and does not touch the existing registry when the final rename fails', async () => {
+      // Force the last rename (temp registry.json -> real registry.json) to fail with a real,
       // deterministic OS-level error: strip write permission from `.skillmesh/` so renaming
       // *into* it is rejected (EACCES), while reading the existing registry.json still succeeds
       // (read + directory search permission is untouched) — mirrors the project's established
@@ -86,15 +97,18 @@ describe('domain/registry', () => {
         await appendInstalledRecord(
           root,
           {
-            files: ['.claude/skills/ordering-knowledge/SKILL.md'],
+            files: [
+              '.claude/skills/ordering-knowledge/SKILL.md',
+              '.cursor/skills/ordering-knowledge/SKILL.md',
+            ],
             id: 'ordering',
             'installed_at': '2026-09-16T00:00:00Z',
             repository: 'https://github.com/DTim887/skill-mesh-ordering',
             type: 'domain',
             version: '1.0.0',
           },
-          'ordering-knowledge',
-          '# fixture skill content\n',
+          SKILL_TARGETS,
+          {content: '# fixture skill content\n', dirName: 'ordering-knowledge'},
         )
       } catch (error) {
         thrown = error
@@ -105,8 +119,9 @@ describe('domain/registry', () => {
       expect(thrown).to.be.instanceOf(Error)
       expect((thrown as NodeJS.ErrnoException).code).to.equal('EACCES')
 
-      // The skill directory rename must have been rolled back.
+      // Both target directories (not just one) must have been rolled back.
       expect(existsSync(path.join(root, '.claude', 'skills', 'ordering-knowledge'))).to.equal(false)
+      expect(existsSync(path.join(root, '.cursor', 'skills', 'ordering-knowledge'))).to.equal(false)
 
       // The original registry.json is untouched.
       expect(readFileSync(path.join(root, '.skillmesh', 'registry.json'), 'utf8')).to.equal(INITIAL_REGISTRY)

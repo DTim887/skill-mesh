@@ -33,6 +33,13 @@ describe('domain/render renderSkillMarkdown', () => {
     expect(output).to.include('**版本**：1.0.0')
     expect(output).to.include('- **Confluence**：https://internal-confluence.example/ordering')
     expect(output).to.include('供 AI 判断何时该查这个知识库')
+    expect(output).to.include('node .skillmesh/scripts/fetch-confluence.mjs "https://internal-confluence.example/ordering"')
+    expect(output).to.include('ATLASSIAN_API_TOKEN')
+    expect(output).to.include('ATLASSIAN_EMAIL')
+
+    // The body no longer repeats the frontmatter description as its own standalone line (FR-010).
+    const bodyAfterFrontmatter = output.split('---').slice(2).join('---')
+    expect(bodyAfterFrontmatter).to.not.include('Commerce Foundation Group Ordering 知识库\n')
   })
 
   it('renders one list entry per knowledge source item, in order', () => {
@@ -55,6 +62,12 @@ describe('domain/render renderSkillMarkdown', () => {
 
     expect(firstIndex).to.be.greaterThan(-1)
     expect(secondIndex).to.be.greaterThan(firstIndex)
+
+    // Each entry repeats its own fetch instruction, not a single shared one.
+    const fetchInstructionCount = output.split('fetch-confluence.mjs').length - 1
+    expect(fetchInstructionCount).to.equal(2)
+    expect(output).to.include('node .skillmesh/scripts/fetch-confluence.mjs "https://example.com/1"')
+    expect(output).to.include('node .skillmesh/scripts/fetch-confluence.mjs "https://example.com/2"')
   })
 
   it('falls back to the raw type string for an unrecognized knowledge source type', () => {
